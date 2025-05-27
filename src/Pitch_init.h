@@ -13,6 +13,6 @@
 // Declare PITCH driver, motor, and encoder as extern so they're usable elsewhere
 extern BLDCDriver3PWM PITCH_driver;
 extern BLDCMotor PITCH_motor;
-extern MagneticSensorSPI PITCH_encoder;
+//extern MagneticSensorSPI PITCH_encoder;
 
 #endif

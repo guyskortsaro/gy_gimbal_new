@@ -1,14 +1,14 @@
-#ifndef ROLL_INIT_H
-#define ROLL_INIT_H
+#ifndef ROLL_ONEAXIS_INIT_H
+#define ROLL_ONEAXIS_INIT_H
 
 #include <Arduino.h>
 #include <SimpleFOC.h>
 
 // Define ROLL Motor Driver PINS
-#define ROLL_PWM_A 4
+#define ROLL_PWM_A 3
 #define ROLL_PWM_B 5
 #define ROLL_PWM_C 6
-#define ROLL_ENABLE_PIN 9
+#define ROLL_ENABLE_PIN 8
 
 // Declare the objects (extern keyword allows global access across files)
 extern BLDCDriver3PWM ROLL_driver;

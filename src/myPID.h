@@ -17,7 +17,6 @@ class myPID
     {
         error           = target - current;
         float error_dot = (error - error_prev) / dt;
-        error_sum += error * dt;
 
         P = Kp * error;
         I += Ki * error * dt;
@@ -34,12 +33,14 @@ class myPID
     {
         error      = 0.0;
         error_prev = 0.0;
-        error_sum  = 0.0;
         I          = 0.0;
     }
 
     // Get the current error value
     float getError() const { return error; }
+    float getP() const { return P; }
+    float getI() const { return I; }
+    float getD() const { return D; }
 
   private:
     float Kp         = 0.0;
@@ -47,7 +48,6 @@ class myPID
     float Kd         = 0.0;
     float error      = 0.0;
     float error_prev = 0.0;
-    float error_sum  = 0.0;
 };
 
 #endif

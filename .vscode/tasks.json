@@ -20,6 +20,16 @@
                 "isDefault": false
             },
             "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "SerialMonitor",
+            "type": "shell",
+            "command": "pio device monitor",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": ["$gcc"]
         }
     ]
 }
