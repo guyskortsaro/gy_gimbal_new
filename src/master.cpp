@@ -4,22 +4,14 @@
 #include <Arduino.h>
 #include <MPU6050.h>
 #include <SimpleFOC.h>
+#include <SoftwareSerial.h>
 #include <Wire.h>
 #include <math.h>
 
-////////////////////////////////////////////
-// -------- PID Control Variables -------- //
-////////////////////////////////////////////
-myPID rollPID(1.0, 0.0, 0.0);
-float RollPID_output       = 0.0;
-float Roll_target_velocity = 0.0;
-myPID pitchPID(1.0, 0.0, 0.0);
-float PitchPID_output       = 0.0;
-float Pitch_target_velocity = 0.0;
+// --------- UART Configuration ---------- //
+SoftwareSerial arduinoB(10, 11); // Rx,Tx pins
 
-////////////////////////////////////////////
 // ---------- IMU Configuration ---------- //
-////////////////////////////////////////////
 MPU6050 mpu;
 
 float       gyroBiasX = 0.0, gyroBiasY = 0.0;
@@ -31,46 +23,22 @@ const float alpha          = 0.98;
 const float GYRO_SCALE     = 131.0;
 const float GYRO_LPF_ALPHA = 0.95;
 
-////////////////////////////////////////////
 // --------- Timing Variables ------------ //
-////////////////////////////////////////////
 unsigned long lastTime = 0, currentTime = 0;
 float         dt           = 0.0;
 unsigned long lastTime_PID = 0, currentTime_PID = 0;
 float         dt_PID = 0.0;
 
-////////////////////////////////////////////
 // ----------- Debugging Vars ----------- //
-////////////////////////////////////////////
 int debugger_index = 0;
 
-void Initialize_Drivers()
-{
-    ROLL_driver.voltage_power_supply = 12;
-    ROLL_driver.init();
-    PITCH_driver.voltage_power_supply = 12;
-    PITCH_driver.init();
-}
-
-void Linking_Drivers_And_Encoders_To_Motors()
-{
-    ROLL_motor.linkDriver(&ROLL_driver);
-    PITCH_motor.linkDriver(&PITCH_driver);
-}
-
-void Setting_Motors_Modes()
-{
-    ROLL_motor.controller  = MotionControlType::velocity_openloop;
-    PITCH_motor.controller = MotionControlType::velocity_openloop;
-}
-
-void Initialize_Motors()
-{
-    ROLL_motor.init();
-    ROLL_motor.initFOC();
-    PITCH_motor.init();
-    PITCH_motor.initFOC();
-}
+// -------- PID Control Variables -------- //
+myPID rollPID(4.0, 1.0, 2.5);
+float RollPID_output       = 0.0;
+float Roll_target_velocity = 0.0;
+myPID pitchPID(4.0, 1.5, 2.5);
+float PitchPID_output       = 0.0;
+float Pitch_target_velocity = 0.0;
 
 void Initialize_IMU()
 {
@@ -87,7 +55,6 @@ void Initialize_IMU()
     Serial.println("MPU6050 initialized.");
     delay(1000);
 }
-
 void Gyro_Bias_Calibration(int samples = 360)
 {
     long gxSum = 0, gySum = 0;
@@ -103,18 +70,30 @@ void Gyro_Bias_Calibration(int samples = 360)
 
     gyroBiasX = gxSum / (float)samples;
     gyroBiasY = gySum / (float)samples;
-
     Serial.print("Gyro bias X: ");
     Serial.println(gyroBiasX);
     Serial.print("Gyro bias Y: ");
     Serial.println(gyroBiasY);
-
     lastTime = millis(); // Initialize timer
 }
-
-////////////////////////////////////////////
-// ---------- Sensor Processing ---------- //
-////////////////////////////////////////////
+void Initialize_Drivers()
+{
+    PITCH_driver.voltage_power_supply = 12;
+    PITCH_driver.init();
+}
+void Linking_Drivers_And_Encoders_To_Motors()
+{
+    PITCH_motor.linkDriver(&PITCH_driver);
+}
+void Setting_Motors_Modes()
+{
+    PITCH_motor.controller = MotionControlType::velocity_openloop;
+}
+void Initialize_Motors()
+{
+    PITCH_motor.init();
+    PITCH_motor.initFOC();
+}
 void Pitch_And_Roll_Calculation()
 {
     // Read raw data
@@ -158,10 +137,6 @@ void Pitch_And_Roll_Calculation()
     roll  = alpha * (roll + gyroRollRate * dt) + (1 - alpha) * accelRoll;
     pitch = alpha * (pitch + gyroPitchRate * dt) + (1 - alpha) * accelPitch;
 }
-
-////////////////////////////////////////////
-// ---------- Motor Control ------------- //
-////////////////////////////////////////////
 void PID_calculation_Motor_move()
 {
     currentTime_PID = millis();
@@ -169,39 +144,16 @@ void PID_calculation_Motor_move()
     if (dt_PID <= 0.01)
         dt_PID = 0.001;
     lastTime_PID          = currentTime_PID;
-    RollPID_output        = rollPID.compute(0.0, roll, dt_PID) / dt_PID;
-    PitchPID_output       = pitchPID.compute(0.0, roll, dt_PID) / dt_PID;
-    Roll_target_velocity  = constrain(RollPID_output, -10.0, 10.0);
-    Pitch_target_velocity = constrain(PitchPID_output, -10.0, 10.0);
-    ROLL_motor.move(Roll_target_velocity);
+    RollPID_output        = rollPID.compute(0.0, roll, dt_PID);
+    PitchPID_output       = pitchPID.compute(0.0, pitch, dt_PID);
+    Roll_target_velocity  = constrain(RollPID_output, -4.0, 4.0);
+    Pitch_target_velocity = constrain(PitchPID_output, -4.0, 4.0);
     PITCH_motor.move(Pitch_target_velocity);
 }
-
-////////////////////////////////////////////
-// ------------- Debug Output ------------ //
-////////////////////////////////////////////
-void Debbuging_Print()
-{
-    debugger_index++;
-    if (debugger_index == 1)
-    {
-        Serial.print(millis());
-        Serial.print(",");
-        Serial.print(roll, 4);
-        Serial.print(",");
-        Serial.print(gyroRollRate, 4);
-        Serial.print(",");
-        Serial.print(pitch, 4);
-        Serial.print(",");
-        Serial.println(gyroPitchRate, 4); // End of line
-        debugger_index = 0;
-    }
-}
-
 void setup()
 {
     Serial.begin(115200);
-    delay(1000);
+    arduinoB.begin(115200);
     Initialize_Drivers();
     Linking_Drivers_And_Encoders_To_Motors();
     Setting_Motors_Modes();
@@ -209,10 +161,21 @@ void setup()
     Initialize_IMU();
     Gyro_Bias_Calibration();
 }
-
 void loop()
 {
     Pitch_And_Roll_Calculation();
     PID_calculation_Motor_move();
-    Debbuging_Print();
+    arduinoB.print("R:");
+    arduinoB.println(Roll_target_velocity);
+
+    Serial.print(millis());
+    Serial.print(",");
+    Serial.print(roll, 4);
+    Serial.print(",");
+    Serial.print(gyroRollRate, 4);
+    Serial.print(",");
+    Serial.print(pitch, 4);
+    Serial.print(",");
+    Serial.println(gyroPitchRate, 4);
+    delay(10);
 }

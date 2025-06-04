@@ -22,9 +22,19 @@
             "problemMatcher": ["$gcc"]
         },
         {
-            "label": "SerialMonitor",
+            "label": "SerialMonitor ArduinoMEGA",
             "type": "shell",
-            "command": "pio device monitor",
+            "command": "pio device monitor -p /dev/ttyACM0",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "SerialMonitor ArduinoNANO",
+            "type": "shell",
+            "command": "pio device monitor -p /dev/ttyUSB0",
             "group": {
                 "kind": "build",
                 "isDefault": false

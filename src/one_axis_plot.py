@@ -6,7 +6,7 @@ import time
 import math
 
 # === CONFIG ===
-PORT = '/dev/ttyUSB0'  # Change to your Arduino port
+PORT = "/dev/ttyUSB1"  # Change to your Arduino port
 BAUD = 115200
 WINDOW_SECONDS = 60
 MAX_SAMPLES = 6000  # Approx. 100Hz × 60s
@@ -21,19 +21,20 @@ ser = serial.Serial(PORT, BAUD)
 time.sleep(2)
 
 fig, ax = plt.subplots()
-line_roll, = ax.plot([], [], label='Roll (rad)', color='blue')
-line_rate, = ax.plot([], [], label='Rate (rad/s)', color='green')
+(line_roll,) = ax.plot([], [], label="Roll (rad)", color="blue")
+(line_rate,) = ax.plot([], [], label="Rate (rad/s)", color="green")
 ax.legend()
-ax.set_xlabel('Time (s)')
-ax.set_ylabel('Value')
-ax.set_title('Roll and Gyro Rate (Last 60 Seconds)')
-ax.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.7)
+ax.set_xlabel("Time (s)")
+ax.set_ylabel("Value")
+ax.set_title("Roll and Gyro Rate (Last 60 Seconds)")
+ax.grid(True, which="both", linestyle="--", linewidth=0.5, alpha=0.7)
 
 # Reference lines for -π, 0, π
-for y in [-2*math.pi, -math.pi, 0, math.pi, 2*math.pi]:
-    ax.axhline(y=y, color='gray', linestyle='--', linewidth=0.4)
+for y in [-2 * math.pi, -math.pi, 0, math.pi, 2 * math.pi]:
+    ax.axhline(y=y, color="gray", linestyle="--", linewidth=0.4)
 
 start_time = None
+
 
 def update(frame):
     global start_time
@@ -63,6 +64,7 @@ def update(frame):
         ax.set_ylim(-2 * math.pi, 2 * math.pi)
 
     return line_roll, line_rate
+
 
 ani = animation.FuncAnimation(fig, update, interval=50)
 plt.tight_layout()
